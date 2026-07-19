@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Transformer — Sprint 02</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,600;1,500;1,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="scene">
+        <header class="masthead">
+            <h1>The <em>Text</em> Transformer</h1>
+        </header>
+
+        <main class="press">
+            <div class="mode-row" id="mode-row">
+                <button type="button" class="mode-pill is-active" data-mode="upper">Uppercase</button>
+                <button type="button" class="mode-pill" data-mode="lower">Lowercase</button>
+                <button type="button" class="mode-pill" data-mode="title">Title Case</button>
+                <button type="button" class="mode-pill" data-mode="reverse">Reverse</button>
+            </div>
+
+            <form id="transform-form" class="press-grid">
+                <div class="pane pane-input">
+                    <textarea id="input-text" placeholder="Set your text here…" rows="8" spellcheck="false"></textarea>
+                </div>
+
+                <div class="press-divider">
+                    <button type="submit" class="press-button" aria-label="Transform text">
+                        <span class="press-button-arrow">→</span>
+                    </button>
+                </div>
+
+                <div class="pane pane-output">
+                    <div id="output-text" class="output-display" data-empty="true">Your result will set here.</div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        const form = document.getElementById('transform-form');
+        const output = document.getElementById('output-text');
+        const button = document.querySelector('.press-button');
+        const modeRow = document.getElementById('mode-row');
+        let selectedMode = 'upper';
+
+        modeRow.addEventListener('click', function (e) {
+            const pill = e.target.closest('.mode-pill');
+            if (!pill) return;
+            document.querySelectorAll('.mode-pill').forEach(p => p.classList.remove('is-active'));
+            pill.classList.add('is-active');
+            selectedMode = pill.dataset.mode;
+        });
+
+        function typeReveal(el, text) {
+            el.dataset.empty = 'false';
+            el.textContent = '';
+            let i = 0;
+            const speed = Math.max(8, Math.min(30, 600 / Math.max(text.length, 1)));
+            function step() {
+                if (i < text.length) {
+                    el.textContent += text[i];
+                    i++;
+                    setTimeout(step, speed);
+                }
+            }
+            step();
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const inputText = document.getElementById('input-text').value;
+            if (!inputText.trim()) return;
+
+            button.classList.add('is-loading');
+
+            try {
+                const response = await fetch('/transform', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: inputText, mode: selectedMode })
+                });
+                const data = await response.json();
+                typeReveal(output, data.result);
+            } catch (err) {
+                output.dataset.empty = 'false';
+                output.textContent = 'Something jammed in the press. Try again.';
+            } finally {
+                button.classList.remove('is-loading');
+            }
+        });
+    </script>
+</body>
+</html>
