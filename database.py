@@ -5,17 +5,17 @@ Sprint 3 goal: "Session Management" -> connection pooling, sessions,
 transactions, and safe rollback on error, all handled in one place so
 every route uses the same pattern.
 """
-
+import os
 from contextlib import contextmanager
 from sqlmodel import SQLModel, Session, create_engine
 
 # SQLite file lives at the project root. For PostgreSQL, swap this line for:
 #   DATABASE_URL = "postgresql://user:password@localhost:5432/skypoint"
-DATABASE_URL = "sqlite:///./skypoint.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./skypoint.db")
 
 # check_same_thread=False is required for SQLite when used with a
 # multi-threaded server like Flask's dev server.
-connect_args = {"check_same_thread": False}
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, echo=True, connect_args=connect_args)
 
 

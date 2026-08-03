@@ -3,6 +3,7 @@ from sqlmodel import select
 
 from database import init_db, get_session
 from models import Transformation
+from ai_service import ai_transform
 
 app = Flask(__name__)
 
@@ -19,15 +20,20 @@ def home():
 @app.route('/transform', methods=['POST'])
 def transform():
     """
-    Receives raw text and a selected mode from the browser (POST request),
-    processes it in Python, saves the record to the database, and returns
-    the transformed result.
+    Receives raw text and a selected mode from the browser (POST request).
+    Basic modes (upper/lower/title/reverse) run locally in Python.
+    AI modes (summarize/improve/formal) call the Gemini API.
+    Every request is saved to the database either way.
     """
     data = request.get_json()
     raw_text = data.get('text', '')
     mode = data.get('mode', 'upper')
 
-    if mode == 'upper':
+    ai_modes = {'summarize', 'improve', 'formal'}
+
+    if mode in ai_modes:
+        transformed_text = ai_transform(raw_text, mode)
+    elif mode == 'upper':
         transformed_text = raw_text.upper()
     elif mode == 'lower':
         transformed_text = raw_text.lower()
@@ -57,4 +63,4 @@ def history():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
