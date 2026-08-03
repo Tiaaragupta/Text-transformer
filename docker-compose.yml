@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: skypoint
+      POSTGRES_PASSWORD: skypointpass
+      POSTGRES_DB: skypoint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    restart: always
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://skypoint:skypointpass@db:5432/skypoint
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    ports:
+      - "5000:5000"
+
+volumes:
+  pgdata:
