@@ -147,7 +147,7 @@ Every push to the connected branch triggers an automatic rebuild and redeploy.
 
 ## Git Workflow
 
-Following trunk-based development as advised by my mentor:
+Following trunk-based development 
 
 1. `git checkout main && git pull origin main`
 2. `git checkout -b feature/<name>`
