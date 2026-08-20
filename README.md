@@ -1,33 +1,35 @@
 # The Text Transformer
 
-A full-stack text transformation web app built as part of a 4-week internship project. Started as a simple local text utility (Week 1-2) and evolved into a containerized, database-backed, AI-integrated application deployed live on the internet.
+A text transformation app I built over a 4-week internship. Started out as a simple local script in week 1-2 (just uppercase/lowercase/reverse type stuff), then grew into a full app with a database, AI integration, and a live deployment.
 
-**🔗 Live App:** https://text-transformer-3702.onrender.com
-
----
-
-## Features
-
-- **Local transforms** (instant, no external calls): Uppercase, Lowercase, Title Case, Reverse
-- **AI-powered transforms** (via Google Gemini API): Summarize, Improve Writing, Formal Tone
-- **Submission history**: every transformation is saved and viewable at `/history`, newest first
-- **Persistent storage**: backed by PostgreSQL in production, with automatic fallback to SQLite for local development
+Live app: https://text-transformer-3702.onrender.com
 
 ---
 
-## Tech Stack
+## What it does
 
-| Layer          | Technology                          |
-|----------------|--------------------------------------|
-| Backend        | Flask (Python)                       |
-| Database ORM   | SQLAlchemy / SQLModel                |
-| Migrations     | Alembic                              |
-| Database       | PostgreSQL (production), SQLite (local dev) |
-| AI Integration | Google Gemini API                    |
-| Frontend       | HTML, CSS, vanilla JS                |
-| Containerization | Docker, Docker Compose             |
-| Hosting        | Render (Web Service + managed PostgreSQL) |
-| Version Control| Git / GitHub (feature branch + PR workflow) |
+You type in some text and pick a transform. There are two kinds:
+
+- Local transforms — uppercase, lowercase, title case, reverse. These run instantly, no API calls involved.
+- AI transforms — summarize, improve writing, formal tone. These hit the Google Gemini API.
+
+Every transform gets saved to the database, and you can see your history at `/history`, newest first. In production this runs on PostgreSQL; locally it falls back to SQLite automatically if there's no `DATABASE_URL` set.
+
+---
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Flask (Python) |
+| ORM | SQLAlchemy / SQLModel |
+| Migrations | Alembic |
+| Database | PostgreSQL (prod), SQLite (local) |
+| AI | Google Gemini API |
+| Frontend | HTML, CSS, vanilla JS |
+| Containers | Docker, Docker Compose |
+| Hosting | Render |
+| Version control | Git/GitHub, feature branches + PRs |
 
 ---
 
@@ -54,100 +56,99 @@ A full-stack text transformation web app built as part of a 4-week internship pr
               └─────────────────────┘
 ```
 
-In production, the Flask app and PostgreSQL database run as two separate services on Render, communicating over Render's internal network. Locally, the same setup is reproduced with Docker Compose (`web` + `db` containers).
+In production, the Flask app and PostgreSQL run as two separate services on Render, talking over Render's internal network. Locally I reproduce the same setup with Docker Compose (`web` + `db` containers).
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 Text-transformer/
-├── app.py                  # Main Flask application & routes
+├── app.py                  # Main Flask app & routes
 ├── database.py             # DB engine/session setup (SQLite/PostgreSQL switch)
 ├── models.py                # SQLModel table definitions
-├── ai_service.py            # Gemini API integration (summarize/improve/formal tone)
-├── alembic/                  # Database migration scripts
+├── ai_service.py            # Gemini API integration
+├── alembic/                  # Migration scripts
 │   ├── env.py
 │   └── versions/
 ├── alembic.ini
 ├── templates/
-│   ├── index.html            # Main transformer UI
-│   └── history.html          # Submission history page
-├── static/                   # CSS/JS assets
+│   ├── index.html            # Main UI
+│   └── history.html          # History page
+├── static/                   # CSS/JS
 ├── requirements.txt
-├── Dockerfile                # Builds the Flask app image
-├── docker-compose.yml        # Runs app + PostgreSQL together
-├── .env                      # Local secrets (GEMINI_API_KEY) — not committed
+├── Dockerfile
+├── docker-compose.yml
+├── .env                      # Local secrets, not committed
 └── README.md
 ```
 
 ---
 
-## Running Locally (without Docker)
+## Running locally (no Docker)
 
 ```bash
 python -m venv venv
 venv\Scripts\activate          # Windows
 pip install -r requirements.txt
 
-# Create a .env file with:
+# create a .env file with:
 # GEMINI_API_KEY=your_key_here
 
 python app.py
 ```
-Visit `http://127.0.0.1:5000`. Uses local SQLite (`skypoint.db`) by default.
+
+Then go to `http://127.0.0.1:5000`. Uses SQLite (`skypoint.db`) by default.
 
 ---
 
-## Running Locally with Docker
+## Running locally with Docker
 
 ```bash
 docker compose up --build
 ```
 
-This spins up two containers:
-- `web` — the Flask app (port 5000)
-- `db` — a PostgreSQL 16 instance (port 5432)
+Spins up two containers:
+- `web` — the Flask app, port 5000
+- `db` — PostgreSQL 16, port 5432
 
-Visit `http://localhost:5000`. Data now persists to PostgreSQL instead of SQLite.
-
----
-
-## Environment Variables
-
-| Variable          | Description                                  |
-|--------------------|-----------------------------------------------|
-| `GEMINI_API_KEY`   | API key for Google Gemini (AI transforms)     |
-| `DATABASE_URL`     | PostgreSQL connection string (falls back to local SQLite if unset) |
+Go to `http://localhost:5000`. This time data persists to PostgreSQL instead of SQLite.
 
 ---
 
-## Database Migrations
+## Environment variables
 
-Migrations are managed with Alembic:
+| Variable | What it's for |
+|---|---|
+| `GEMINI_API_KEY` | Google Gemini API key for the AI transforms |
+| `DATABASE_URL` | PostgreSQL connection string. Falls back to local SQLite if not set |
+
+---
+
+## Database migrations
+
+Using Alembic:
 
 ```bash
 alembic upgrade head        # apply migrations
-alembic revision --autogenerate -m "description"   # create a new migration
+alembic revision --autogenerate -m "description"   # create a new one
 ```
 
 ---
 
-## Deployment (Render)
+## Deployment
 
-The app is deployed on Render as two services:
-1. **PostgreSQL database** (`text-transformer-db`) — managed Postgres instance
-2. **Web Service** (`text-transformer`) — built directly from the repo's `Dockerfile`, deployed from the `feature/ai-integration` branch
+Deployed on Render as two services:
+1. PostgreSQL database (`text-transformer-db`) — managed instance
+2. Web service (`text-transformer`) — built from the repo's `Dockerfile`, deployed off the `feature/ai-integration` branch
 
-Environment variables (`DATABASE_URL`, `GEMINI_API_KEY`) are configured directly in the Render dashboard and are not committed to the repository.
-
-Every push to the connected branch triggers an automatic rebuild and redeploy.
+Env vars (`DATABASE_URL`, `GEMINI_API_KEY`) are set directly in the Render dashboard, not committed anywhere. Every push to the connected branch auto-rebuilds and redeploys.
 
 ---
 
-## Git Workflow
+## Git workflow
 
-Following trunk-based development 
+Trunk-based development:
 
 1. `git checkout main && git pull origin main`
 2. `git checkout -b feature/<name>`
@@ -158,16 +159,16 @@ Following trunk-based development
 
 ---
 
-## Weekly Progress Summary
+## Progress by week
 
-- **Week 1-2:** Core text transformation logic + basic frontend
-- **Week 3:** Database persistence layer (SQLModel + Alembic), submission history page
-- **Week 4:** Gemini AI integration (Summarize / Improve Writing / Formal Tone), PostgreSQL migration, Docker containerization, live deployment to Render
+- Week 1-2: core transform logic + basic frontend
+- Week 3: database persistence (SQLModel + Alembic), history page
+- Week 4: Gemini AI integration, PostgreSQL migration, Docker, live deployment on Render
 
 ---
 
-## Known Limitations / Future Improvements
+## Known limitations
 
-- Free-tier Render instance spins down after inactivity, causing a ~50s cold-start delay on the first request
-- No loading indicator on the frontend while waiting for AI responses
+- Free-tier Render instance spins down when idle, so the first request after a while has a ~50s cold start
+- No loading indicator on the frontend while waiting on the AI response
 - No automated tests yet
